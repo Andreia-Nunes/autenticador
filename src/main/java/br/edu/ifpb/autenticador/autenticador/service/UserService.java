@@ -16,6 +16,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private PermissionsRegistry registry = new PermissionsRegistry();
+
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -43,34 +45,9 @@ public class UserService {
     // TODO - refatorar método para utilizar o padrão PROTOTYPE que forneça um registry para criar os quatro tipos de permissão (administrador, somenteLeitura, operador e default)
     public void updateUserPermission(Long userId, String permissionName) {
         User user = userRepository.findById(userId).orElseThrow( () -> new BadRequestException("Usuário não existe!"));
-        Permissions permission = new Permissions();
-        switch (permissionName) {
-            case "administrador":
-                permission.setAdminPermission(true);
-                break;
-            case "somenteLeitura":
-                permission.setAdminPermission(false);
-                permission.setListPermission(true);
-                permission.setDeletePermission(false);
-                permission.setInsertPermission(false);
-                permission.setUpdatePermission(false);
-                break;
-            case "operador":
-                permission.setAdminPermission(false);
-                permission.setDeletePermission(false);
-                permission.setListPermission(true);
-                permission.setInsertPermission(true);
-                permission.setUpdatePermission(true);
-                break;
-            default:
-                permission.setAdminPermission(false);
-                permission.setDeletePermission(false);
-                permission.setListPermission(false);
-                permission.setInsertPermission(false);
-                permission.setUpdatePermission(false);
-        }
+        Permissions permission = this.registry.getItem(permissionName);
+
         user.setPermission(permission);
         userRepository.save(user);
     }
-
 }
